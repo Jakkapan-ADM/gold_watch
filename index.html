@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gold Watch · 07:00 / 20:00</title>
+<meta name="description" content="บันทึกราคาทองที่ 7:00 และ 20:00 น. ไทย แล้วเช็คว่าหลังผ่านไป 1 ชั่วโมงราคาขึ้นหรือลง">
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="shortcut icon" href="icons/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+
+<meta name="theme-color" content="#14171F" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F7F4EC" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gold Watch">
+<meta name="mobile-web-app-capable" content="yes">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+.gw-root {
+  --bg: #14171F;
+  --panel: #1B2030;
+  --panel-2: #212739;
+  --line: #2E3550;
+  --gold: #D9B65C;
+  --gold-bright: #F0D385;
+  --up: #45B98C;
+  --down: #E0605A;
+  --text: #EAEAF2;
+  --text-dim: #8D93AC;
+  --text-faint: #5C6285;
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  border-radius: 14px;
+  padding: 28px;
+  max-width: 780px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.gw-root * { box-sizing: border-box; }
+
+.gw-root.gw-light {
+  --bg: #F7F4EC;
+  --panel: #FFFFFF;
+  --panel-2: #F1EDE1;
+  --line: #DEDACB;
+  --gold: #9C7415;
+  --gold-bright: #7A5A0E;
+  --up: #1F8F6B;
+  --down: #C23B35;
+  --text: #201C12;
+  --text-dim: #6B6656;
+  --text-faint: #9B9682;
+}
+.gw-root.gw-light .gw-slot-flag {
+  background: rgba(156, 116, 21, 0.12);
+}
+.gw-root.gw-light .gw-btn {
+  color: #FFFDF7;
+}
+
+.gw-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+}
+.gw-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gw-logo {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+.gw-header-right {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+.gw-theme-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+.gw-theme-toggle:hover {
+  border-color: var(--gold);
+  color: var(--gold-bright);
+}
+.gw-theme-toggle svg { width: 17px; height: 17px; }
+.gw-title {
+  font-family: 'Spectral', serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--gold-bright);
+  letter-spacing: 0.3px;
+}
+.gw-sub {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.gw-clock {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+.gw-clock-label {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-align: right;
+}
+
+.gw-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.gw-slot-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.gw-slot-card.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold) inset;
+}
+.gw-slot-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--gold-bright);
+}
+.gw-slot-status {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 5px;
+}
+.gw-slot-flag {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: rgba(217, 182, 92, 0.12);
+  padding: 3px 7px;
+  border-radius: 5px;
+}
+
+.gw-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+.gw-card-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+.gw-form-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.gw-field {
+  flex: 1;
+  min-width: 120px;
+}
+.gw-field label {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-bottom: 5px;
+}
+.gw-field input, .gw-field select {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--text);
+  padding: 9px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+}
+.gw-field select { font-family: 'Inter', sans-serif; }
+.gw-field input:focus, .gw-field select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.gw-btn {
+  background: var(--gold);
+  color: #201804;
+  border: none;
+  border-radius: 7px;
+  padding: 10px 18px;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+.gw-btn:hover { background: var(--gold-bright); }
+.gw-btn:disabled { background: var(--text-faint); cursor: not-allowed; }
+.gw-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+}
+.gw-btn-ghost:hover { border-color: var(--gold); color: var(--gold-bright); background: transparent; }
+
+.gw-msg {
+  font-size: 12.5px;
+  margin-top: 8px;
+  color: var(--gold-bright);
+  min-height: 16px;
+}
+
+.gw-pending-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.gw-pending-info {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+}
+.gw-pending-info span { color: var(--text-dim); }
+.gw-pending-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.gw-pending-actions input {
+  width: 100px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 7px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+
+.gw-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.gw-stat-box {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+.gw-stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold-bright);
+}
+.gw-stat-val.up { color: var(--up); }
+.gw-stat-val.down { color: var(--down); }
+.gw-stat-lbl {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 4px;
+}
+
+.gw-table-wrap { overflow-x: auto; }
+table.gw-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+}
+table.gw-table th {
+  text-align: left;
+  color: var(--text-faint);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+}
+table.gw-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+}
+.gw-dir-up { color: var(--up); font-weight: 600; }
+.gw-dir-down { color: var(--down); font-weight: 600; }
+.gw-dir-flat { color: var(--text-dim); }
+.gw-empty {
+  text-align: center;
+  color: var(--text-faint);
+  padding: 24px 0;
+  font-size: 13px;
+}
+.gw-del {
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 13px;
+}
+.gw-del:hover { color: var(--down); }
+</style>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #14171F;
+    min-height: 100vh;
+  }
+  body {
+    padding: 20px 14px 40px;
+  }
+  @media (min-width: 600px) {
+    body { padding: 40px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="gw-root" id="gwRoot">
+  <div class="gw-header">
+    <div class="gw-brand">
+      <svg class="gw-logo" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" id="gwLogoSvg">
+        <rect x="3" y="3" width="34" height="34" rx="9" fill="#1B2030" id="gwLogoBg"/>
+        <rect x="3" y="3" width="34" height="34" rx="9" fill="none" stroke="#D9B65C" stroke-width="1.4" id="gwLogoRing"/>
+        <path d="M11 25.5 L14.5 14.5 H20 C22.5 14.5 24 16 24 18 C24 20.3 22.2 21.8 19.8 21.8 H15.6" stroke="#D9B65C" stroke-width="2.1" fill="none" stroke-linecap="round" stroke-linejoin="round" id="gwLogoG1"/>
+        <path d="M25.5 14.5 L22.5 25.5" stroke="#D9B65C" stroke-width="2.1" fill="none" stroke-linecap="round" id="gwLogoG2"/>
+        <path d="M27.5 25.5 L29 20" stroke="#D9B65C" stroke-width="2.1" fill="none" stroke-linecap="round" id="gwLogoG3"/>
+        <circle cx="29.3" cy="16.3" r="1.6" fill="#D9B65C" id="gwLogoDot"/>
+      </svg>
+      <div>
+        <div class="gw-title">Gold Watch · 07:00 / 20:00</div>
+        <div class="gw-sub">บันทึกราคาทองที่ 7:00 และ 20:00 น. แล้วเช็คผลหลังผ่านไป 1 ชั่วโมง</div>
+      </div>
+    </div>
+    <div class="gw-header-right">
+      <button class="gw-theme-toggle" id="gwThemeToggle" title="สลับธีมขาว/ดำ">
+        <svg id="gwThemeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg id="gwThemeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+      </button>
+      <div>
+        <div class="gw-clock-label">เวลาไทย</div>
+        <div class="gw-clock" id="gwClock">--:--:--</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gw-slots" id="gwSlots"></div>
+
+  <div class="gw-card">
+    <div class="gw-card-title">บันทึกราคาใหม่</div>
+    <div class="gw-form-row">
+      <div class="gw-field">
+        <label>วันที่</label>
+        <input type="date" id="gwDate">
+      </div>
+      <div class="gw-field">
+        <label>ช่วงเวลา</label>
+        <select id="gwSlot">
+          <option value="07:00">07:00 น.</option>
+          <option value="20:00">20:00 น.</option>
+        </select>
+      </div>
+      <div class="gw-field">
+        <label>ราคาทอง ณ เวลานั้น (USD/oz)</label>
+        <div style="display:flex; gap:6px;">
+          <input type="number" step="0.01" id="gwPrice" placeholder="เช่น 2415.30" style="flex:1;">
+          <button class="gw-btn gw-btn-ghost" id="gwFetchBtn" title="ดึงราคาล่าสุดอัตโนมัติ" style="white-space:nowrap; padding:9px 12px;">ดึงราคาสด</button>
+        </div>
+      </div>
+    </div>
+    <button class="gw-btn" id="gwAddBtn">บันทึกราคา</button>
+    <div class="gw-msg" id="gwMsg"></div>
+  </div>
+
+  <div class="gw-card" id="gwPendingCard" style="display:none;">
+    <div class="gw-card-title">รอเช็คผลหลัง 1 ชั่วโมง</div>
+    <div id="gwPendingList"></div>
+  </div>
+
+  <div class="gw-card">
+    <div class="gw-card-title">สรุปสถิติ</div>
+    <div class="gw-stats" id="gwStats"></div>
+  </div>
+
+  <div class="gw-card">
+    <div class="gw-card-title">ประวัติทั้งหมด</div>
+    <div class="gw-table-wrap" id="gwTableWrap"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Local storage shim (window.storage is only available inside Claude artifacts;
+  // this standalone version persists data in the browser via localStorage instead).
+  const storage = {
+    async get(key) {
+      const v = localStorage.getItem(key);
+      return v !== null ? { key, value: v } : null;
+    },
+    async set(key, value) {
+      localStorage.setItem(key, value);
+      return { key, value };
+    }
+  };
+
+  const STORAGE_KEY = 'gold_watch_entries';
+  let entries = [];
+  let loaded = false;
+
+  function bkkParts() {
+    const fmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Bangkok', hour12: false,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+    const parts = {};
+    fmt.formatToParts(new Date()).forEach(p => parts[p.type] = p.value);
+    return parts;
+  }
+
+  function bkkNowMs() {
+    // approximate epoch ms "as if" the Bangkok wall clock were UTC, for duration math
+    const p = bkkParts();
+    return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+  }
+
+  function todayStrBkk() {
+    const p = bkkParts();
+    return `${p.year}-${p.month}-${p.day}`;
+  }
+
+  function fmtDateThai(d) {
+    const [y,m,day] = d.split('-');
+    return `${day}/${m}/${y}`;
+  }
+
+  function uid() {
+    return 'e' + Date.now() + Math.random().toString(36).slice(2,7);
+  }
+
+  async function fetchLivePrice() {
+    // Free, no-key, CORS-enabled spot gold feed (USD per troy oz).
+    // Not TradingView itself (no public browser-side API for that),
+    // but an independent live XAU/USD source — good as a stand-in.
+    const res = await fetch('https://api.gold-api.com/price/XAU');
+    if (!res.ok) throw new Error('bad response');
+    const data = await res.json();
+    const price = data.price ?? data.rate ?? data.value;
+    if (typeof price !== 'number') throw new Error('no price field');
+    return price;
+  }
+
+  async function load() {
+    try {
+      const res = await storage.get(STORAGE_KEY);
+      entries = res && res.value ? JSON.parse(res.value) : [];
+    } catch (e) {
+      entries = [];
+    }
+    loaded = true;
+    renderAll();
+  }
+
+  async function save() {
+    try {
+      await storage.set(STORAGE_KEY, JSON.stringify(entries));
+    } catch (e) {
+      showMsg('บันทึกไม่สำเร็จ ลองอีกครั้ง', true);
+    }
+  }
+
+  function showMsg(text, isErr) {
+    const el = document.getElementById('gwMsg');
+    el.textContent = text;
+    el.style.color = isErr ? 'var(--down)' : 'var(--gold-bright)';
+    setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 3500);
+  }
+
+  function updateClock() {
+    const p = bkkParts();
+    document.getElementById('gwClock').textContent = `${p.hour}:${p.minute}:${p.second}`;
+    renderSlots();
+  }
+
+  function renderSlots() {
+    const p = bkkParts();
+    const curH = +p.hour, curM = +p.minute;
+    const curMinutes = curH * 60 + curM;
+    const today = todayStrBkk();
+
+    const slotsDef = [
+      { time: '07:00', minutes: 7*60 },
+      { time: '20:00', minutes: 20*60 }
+    ];
+
+    const el = document.getElementById('gwSlots');
+    el.innerHTML = '';
+    slotsDef.forEach(s => {
+      const diff = curMinutes - s.minutes;
+      const isNear = Math.abs(diff) <= 15;
+      const loggedToday = entries.some(e => e.date === today && e.slot === s.time);
+      const card = document.createElement('div');
+      card.className = 'gw-slot-card' + (isNear ? ' active' : '');
+      let flag = '';
+      if (isNear) flag = '<div class="gw-slot-flag">ใกล้ถึงเวลา</div>';
+      let status;
+      if (loggedToday) status = '✓ บันทึกวันนี้แล้ว';
+      else status = isNear ? 'ถึงเวลาบันทึกแล้ว' : 'ยังไม่ถึงเวลา';
+      card.innerHTML = `${flag}<div class="gw-slot-time">${s.time} น.</div><div class="gw-slot-status">${status}</div>`;
+      el.appendChild(card);
+    });
+  }
+
+  function directionOf(e) {
+    if (e.priceAfter == null) return null;
+    const d = e.priceAfter - e.priceAt;
+    if (Math.abs(d) < 0.0001) return 'flat';
+    return d > 0 ? 'up' : 'down';
+  }
+
+  function renderPending() {
+    const nowMs = bkkNowMs();
+    const pending = entries.filter(e => e.priceAfter == null);
+    const card = document.getElementById('gwPendingCard');
+    const list = document.getElementById('gwPendingList');
+    list.innerHTML = '';
+
+    if (pending.length === 0) {
+      card.style.display = 'none';
+      return;
+    }
+    card.style.display = 'block';
+
+    pending
+      .slice()
+      .sort((a,b) => a.loggedAtMs - b.loggedAtMs)
+      .forEach(e => {
+        const elapsedMin = Math.round((nowMs - e.loggedAtMs) / 60000);
+        const ready = elapsedMin >= 60;
+        const row = document.createElement('div');
+        row.className = 'gw-pending-item';
+        row.innerHTML = `
+          <div class="gw-pending-info">
+            ${fmtDateThai(e.date)} · ${e.slot} น. — ราคาตอนนั้น <span>${e.priceAt.toFixed(2)}</span>
+            &nbsp;·&nbsp; <span>${ready ? 'ผ่านมา ' + elapsedMin + ' นาที พร้อมเช็คผล' : 'ผ่านมา ' + elapsedMin + ' นาที (รออีก ' + (60-elapsedMin) + ' นาที)'}</span>
+          </div>
+          <div class="gw-pending-actions">
+            <input type="number" step="0.01" placeholder="ราคาหลัง 1 ชม." id="pf_${e.id}">
+            <button class="gw-btn gw-btn-ghost" data-fetchfor="${e.id}" style="padding:7px 10px;">ดึงราคาสด</button>
+            <button class="gw-btn" data-fill="${e.id}">บันทึกผล</button>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+
+    list.querySelectorAll('[data-fetchfor]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-fetchfor');
+        const input = document.getElementById('pf_' + id);
+        btn.disabled = true;
+        const oldLabel = btn.textContent;
+        btn.textContent = '...';
+        try {
+          const price = await fetchLivePrice();
+          input.value = price.toFixed(2);
+          showMsg('ดึงราคาสดสำเร็จ: ' + price.toFixed(2) + ' USD');
+        } catch (e) {
+          showMsg('ดึงราคาอัตโนมัติไม่สำเร็จ กรอกเองได้เลย', true);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = oldLabel;
+        }
+      });
+    });
+
+    list.querySelectorAll('[data-fill]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-fill');
+        const input = document.getElementById('pf_' + id);
+        const val = parseFloat(input.value);
+        if (isNaN(val)) { showMsg('กรอกราคาให้ถูกต้องก่อน', true); return; }
+        const entry = entries.find(x => x.id === id);
+        entry.priceAfter = val;
+        entry.followedUpAtMs = bkkNowMs();
+        await save();
+        renderAll();
+        showMsg('บันทึกผลเรียบร้อย');
+      });
+    });
+  }
+
+  function renderStats() {
+    const done = entries.filter(e => e.priceAfter != null);
+    const up = done.filter(e => directionOf(e) === 'up').length;
+    const down = done.filter(e => directionOf(e) === 'down').length;
+    const flat = done.filter(e => directionOf(e) === 'flat').length;
+    const winRate = done.length ? Math.round((up / done.length) * 100) : 0;
+
+    const el = document.getElementById('gwStats');
+    el.innerHTML = `
+      <div class="gw-stat-box"><div class="gw-stat-val">${done.length}</div><div class="gw-stat-lbl">ครั้งที่เช็คผลแล้ว</div></div>
+      <div class="gw-stat-box"><div class="gw-stat-val up">${up}</div><div class="gw-stat-lbl">ขึ้น</div></div>
+      <div class="gw-stat-box"><div class="gw-stat-val down">${down}</div><div class="gw-stat-lbl">ลง</div></div>
+      <div class="gw-stat-box"><div class="gw-stat-val">${winRate}%</div><div class="gw-stat-lbl">โอกาสขึ้น</div></div>
+    `;
+  }
+
+  function renderTable() {
+    const wrap = document.getElementById('gwTableWrap');
+    if (entries.length === 0) {
+      wrap.innerHTML = '<div class="gw-empty">ยังไม่มีข้อมูล เริ่มบันทึกราคาด้านบนได้เลย</div>';
+      return;
+    }
+    const sorted = entries.slice().sort((a,b) => b.loggedAtMs - a.loggedAtMs);
+    let rows = sorted.map(e => {
+      const dir = directionOf(e);
+      let dirCell = '<span class="gw-dir-flat">รอผล</span>';
+      let diffCell = '—';
+      let afterCell = '—';
+      if (dir) {
+        const diff = e.priceAfter - e.priceAt;
+        afterCell = e.priceAfter.toFixed(2);
+        diffCell = (diff >= 0 ? '+' : '') + diff.toFixed(2);
+        if (dir === 'up') dirCell = '<span class="gw-dir-up">▲ ขึ้น</span>';
+        else if (dir === 'down') dirCell = '<span class="gw-dir-down">▼ ลง</span>';
+        else dirCell = '<span class="gw-dir-flat">เท่าเดิม</span>';
+      }
+      return `<tr>
+        <td>${fmtDateThai(e.date)}</td>
+        <td>${e.slot}</td>
+        <td>${e.priceAt.toFixed(2)}</td>
+        <td>${afterCell}</td>
+        <td>${diffCell}</td>
+        <td>${dirCell}</td>
+        <td><span class="gw-del" data-del="${e.id}">ลบ</span></td>
+      </tr>`;
+    }).join('');
+
+    wrap.innerHTML = `
+      <table class="gw-table">
+        <thead><tr>
+          <th>วันที่</th><th>เวลา</th><th>ราคาเริ่ม</th><th>ราคา +1ชม.</th><th>ผลต่าง</th><th>ทิศทาง</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+
+    wrap.querySelectorAll('[data-del]').forEach(el => {
+      el.addEventListener('click', async () => {
+        const id = el.getAttribute('data-del');
+        entries = entries.filter(x => x.id !== id);
+        await save();
+        renderAll();
+      });
+    });
+  }
+
+  function renderAll() {
+    if (!loaded) return;
+    renderSlots();
+    renderPending();
+    renderStats();
+    renderTable();
+  }
+
+  async function addEntry() {
+    const date = document.getElementById('gwDate').value;
+    const slot = document.getElementById('gwSlot').value;
+    const priceStr = document.getElementById('gwPrice').value;
+    const price = parseFloat(priceStr);
+
+    if (!date) { showMsg('เลือกวันที่ก่อน', true); return; }
+    if (isNaN(price)) { showMsg('กรอกราคาให้ถูกต้อง', true); return; }
+
+    const dup = entries.find(e => e.date === date && e.slot === slot);
+    if (dup) { showMsg('ช่วงเวลานี้ของวันนี้บันทึกไปแล้ว', true); return; }
+
+    const entry = {
+      id: uid(),
+      date, slot,
+      priceAt: price,
+      loggedAtMs: bkkNowMs(),
+      priceAfter: null,
+      followedUpAtMs: null
+    };
+    entries.push(entry);
+    await save();
+    document.getElementById('gwPrice').value = '';
+    renderAll();
+    showMsg('บันทึกราคาเรียบร้อย รออีก 1 ชม. แล้วมาบันทึกผล');
+  }
+
+  const THEME_KEY = 'gold_watch_theme';
+
+  function applyTheme(theme) {
+    const root = document.getElementById('gwRoot');
+    const isLight = theme === 'light';
+    root.classList.toggle('gw-light', isLight);
+    document.getElementById('gwThemeIconMoon').style.display = isLight ? 'none' : '';
+    document.getElementById('gwThemeIconSun').style.display = isLight ? '' : 'none';
+
+    const goldColor = isLight ? '#9C7415' : '#D9B65C';
+    const bgColor = isLight ? '#FFFFFF' : '#1B2030';
+    document.getElementById('gwLogoBg').setAttribute('fill', bgColor);
+    ['gwLogoRing','gwLogoG1','gwLogoG2','gwLogoG3'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el.hasAttribute('stroke')) el.setAttribute('stroke', goldColor);
+    });
+    document.getElementById('gwLogoDot').setAttribute('fill', goldColor);
+  }
+
+  async function loadTheme() {
+    let theme = 'dark';
+    try {
+      const res = await storage.get(THEME_KEY);
+      if (res && res.value) theme = res.value;
+    } catch (e) { /* default dark */ }
+    applyTheme(theme);
+  }
+
+  async function toggleTheme() {
+    const isLight = document.getElementById('gwRoot').classList.contains('gw-light');
+    const next = isLight ? 'dark' : 'light';
+    applyTheme(next);
+    try { await storage.set(THEME_KEY, next); } catch (e) { /* ignore */ }
+  }
+
+  document.getElementById('gwThemeToggle').addEventListener('click', toggleTheme);
+  loadTheme();
+
+  document.getElementById('gwDate').value = todayStrBkk();
+  document.getElementById('gwAddBtn').addEventListener('click', addEntry);
+
+  document.getElementById('gwFetchBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('gwFetchBtn');
+    btn.disabled = true;
+    btn.textContent = 'กำลังดึง...';
+    try {
+      const price = await fetchLivePrice();
+      document.getElementById('gwPrice').value = price.toFixed(2);
+      showMsg('ดึงราคาสดสำเร็จ: ' + price.toFixed(2) + ' USD');
+    } catch (e) {
+      showMsg('ดึงราคาอัตโนมัติไม่สำเร็จ กรอกเองได้เลย', true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'ดึงราคาสด';
+    }
+  });
+
+  updateClock();
+  setInterval(updateClock, 1000);
+  load();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
